@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Book, Chapter } from '../types';
+import type { Book } from '../types';
+import type { DriveFile } from '../lib/google';
 import { saveBook, getAllBooks, deleteBook } from '../lib/db';
 
 interface BookState {
@@ -7,16 +8,12 @@ interface BookState {
   currentBook: Book | null;
   isLoading: boolean;
   loadBooks: () => Promise<void>;
-  createBook: (handles: FileSystemFileHandle[]) => Promise<void>;
+  createBook: (files: DriveFile[]) => Promise<void>;
   openBook: (book: Book) => void;
   closeBook: () => void;
   removeBook: (id: string) => Promise<void>;
   setCurrentChapter: (index: number) => void;
   updateScrollPosition: (chapterIndex: number, scrollTop: number) => void;
-}
-
-function chapterFromHandle(handle: FileSystemFileHandle): Chapter {
-  return { name: handle.name.replace(/\.(md|markdown)$/i, ''), handle };
 }
 
 export const useBookStore = create<BookState>((set, get) => ({
@@ -30,13 +27,12 @@ export const useBookStore = create<BookState>((set, get) => ({
     set({ books, isLoading: false });
   },
 
-  createBook: async (handles: FileSystemFileHandle[]) => {
-    const sorted = [...handles].sort((a, b) => a.name.localeCompare(b.name));
-    const chapters = sorted.map(chapterFromHandle);
+  createBook: async (files: DriveFile[]) => {
+    const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name));
     const book: Book = {
       id: crypto.randomUUID(),
-      title: chapters[0].name,
-      chapters,
+      title: sorted[0].name,
+      chapters: sorted.map(f => ({ name: f.name, driveFileId: f.id })),
       currentChapterIndex: 0,
       scrollPositions: {},
       createdAt: Date.now(),

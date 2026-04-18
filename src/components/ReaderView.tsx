@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useBookStore } from '../store/bookStore';
+import { useAuthStore } from '../store/authStore';
+import { fetchFileContent } from '../lib/google';
 import { ChapterNav } from './ChapterNav';
 
 export function ReaderView() {
@@ -9,6 +11,7 @@ export function ReaderView() {
   const closeBook = useBookStore(s => s.closeBook);
   const setCurrentChapter = useBookStore(s => s.setCurrentChapter);
   const updateScrollPosition = useBookStore(s => s.updateScrollPosition);
+  const { accessToken, signIn } = useAuthStore();
 
   const [content, setContent] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,41 +21,33 @@ export function ReaderView() {
   const debounceRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    if (!currentBook) return;
+    if (!currentBook || !accessToken) return;
 
     const book = currentBook;
+    const token = accessToken;
     const chapterIndex = book.currentChapterIndex;
     const chapter = book.chapters[chapterIndex];
 
     async function load() {
       try {
-        const perm = await chapter.handle.queryPermission({ mode: 'read' });
-        if (perm !== 'granted') {
-          const req = await chapter.handle.requestPermission({ mode: 'read' });
-          if (req !== 'granted') {
-            setError('File access was denied. Click retry and grant permission when prompted.');
-            return;
-          }
-        }
         setError(null);
-        const file = await chapter.handle.getFile();
-        setContent(await file.text());
-
+        const text = await fetchFileContent(chapter.driveFileId, token);
+        setContent(text);
         const savedScroll = book.scrollPositions[chapterIndex] ?? 0;
         requestAnimationFrame(() => {
           if (scrollRef.current) scrollRef.current.scrollTop = savedScroll;
         });
       } catch {
-        setError('Could not read the file. It may have been moved or deleted.');
+        setError('Could not load chapter from Google Drive.');
       }
     }
 
     load();
-  }, [currentBook?.id, currentBook?.currentChapterIndex, loadTrigger]);
+  }, [currentBook?.id, currentBook?.currentChapterIndex, accessToken, loadTrigger]);
 
   const handleScroll = useCallback(() => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    debounceRef.current = window.setTimeout(() => {
       if (!scrollRef.current || !currentBook) return;
       updateScrollPosition(currentBook.currentChapterIndex, scrollRef.current.scrollTop);
     }, 400);
@@ -112,7 +107,14 @@ export function ReaderView() {
         )}
 
         <main ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
-          {error ? (
+          {!accessToken ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-500 text-sm">
+              <p>Your Google session expired.</p>
+              <button onClick={signIn} className="underline hover:text-neutral-800">
+                Sign in again
+              </button>
+            </div>
+          ) : error ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-500 text-sm">
               <p className="max-w-xs text-center">{error}</p>
               <button

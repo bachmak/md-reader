@@ -1,6 +1,6 @@
 export interface Chapter {
   name: string;
-  handle: FileSystemFileHandle;
+  driveFileId: string;
 }
 
 export interface Book {
