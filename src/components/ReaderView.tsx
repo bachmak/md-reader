@@ -20,8 +20,9 @@ export function ReaderView() {
   useEffect(() => {
     if (!currentBook) return;
 
-    const chapterIndex = currentBook.currentChapterIndex;
-    const chapter = currentBook.chapters[chapterIndex];
+    const book = currentBook;
+    const chapterIndex = book.currentChapterIndex;
+    const chapter = book.chapters[chapterIndex];
 
     async function load() {
       try {
@@ -37,7 +38,7 @@ export function ReaderView() {
         const file = await chapter.handle.getFile();
         setContent(await file.text());
 
-        const savedScroll = currentBook.scrollPositions[chapterIndex] ?? 0;
+        const savedScroll = book.scrollPositions[chapterIndex] ?? 0;
         requestAnimationFrame(() => {
           if (scrollRef.current) scrollRef.current.scrollTop = savedScroll;
         });
