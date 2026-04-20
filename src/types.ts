@@ -1,6 +1,14 @@
+export interface User {
+  id: string;
+  email: string;
+  googleId: string;
+  createdAt: number;
+}
+
 export interface Chapter {
+  id: string;
   name: string;
-  driveFileId: string;
+  order: number;
 }
 
 export interface Book {
@@ -10,5 +18,6 @@ export interface Book {
   currentChapterIndex: number;
   scrollPositions: Record<number, number>;
   createdAt: number;
-  lastOpenedAt: number;
+  updatedAt: number;
 }
+

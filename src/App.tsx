@@ -8,11 +8,15 @@ export function App() {
   const currentBook = useBookStore(s => s.currentBook);
   const loadBooks = useBookStore(s => s.loadBooks);
   const init = useAuthStore(s => s.init);
+  const user = useAuthStore(s => s.user);
 
   useEffect(() => {
     init();
-    loadBooks();
-  }, [init, loadBooks]);
+  }, [init]);
+
+  useEffect(() => {
+    if (user) loadBooks();
+  }, [user, loadBooks]);
 
   return currentBook ? <ReaderView /> : <BookshelfView />;
 }

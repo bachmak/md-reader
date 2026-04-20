@@ -1,27 +1,35 @@
 import { create } from 'zustand';
-import { initGoogleApis, createTokenClient } from '../lib/google';
+import type { User } from '../types';
 
 interface AuthState {
-  accessToken: string | null;
-  ready: boolean;
+  user: User | null;
+  loading: boolean;
   init: () => Promise<void>;
   signIn: () => void;
+  signOut: () => Promise<void>;
 }
 
-let _tokenClient: { requestAccessToken: () => void } | null = null;
-
 export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  ready: false,
+  user: null,
+  loading: true,
 
   init: async () => {
-    await initGoogleApis();
-    _tokenClient = createTokenClient(
-      (token) => set({ accessToken: token }),
-      () => set({ accessToken: null }),
-    );
-    set({ ready: true });
+    try {
+      const res = await fetch('/auth/me', { credentials: 'include' });
+      const user = res.ok ? await res.json() : null;
+      set({ user, loading: false });
+    } catch {
+      set({ loading: false });
+    }
   },
 
-  signIn: () => _tokenClient?.requestAccessToken(),
+  signIn: () => {
+    window.location.href = '/auth/google';
+  },
+
+  signOut: async () => {
+    await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+    set({ user: null });
+    window.location.href = '/';
+  },
 }));

@@ -1,3 +1,9 @@
 node_modules
 dist
 .env.local
+uploads
+*.db
+*.db-shm
+*.db-wal
+backend/dist
+backend/node_modules
