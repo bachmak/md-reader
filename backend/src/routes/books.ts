@@ -36,7 +36,10 @@ router.get('/', requireAuth, (req, res) => {
     const chapters = db
       .prepare('SELECT id, name, \`order\` FROM chapters WHERE bookId = ? ORDER BY \`order\`')
       .all(book.id) as Array<{ id: string; name: string; order: number }>;
-    return { ...book, chapters };
+    const readings = db
+      .prepare('SELECT chapterId, scrollPosition, updatedAt FROM readings WHERE userId = ? AND bookId = ?')
+      .all(user.id, book.id) as Array<{ chapterId: string; scrollPosition: number; updatedAt: number }>;
+    return { ...book, chapters, readings };
   });
 
   res.json(booksWithChapters);

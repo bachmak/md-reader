@@ -23,12 +23,22 @@ export const useBookStore = create<BookState>((set, get) => ({
     set({ isLoading: true });
     try {
       const res = await fetch('/api/books', { credentials: 'include' });
-      const raw = (await res.json()) as Book[];
-      const books = raw.map(b => ({
-        ...b,
-        currentChapterIndex: b.currentChapterIndex ?? 0,
-        scrollPositions: b.scrollPositions ?? {},
-      }));
+      const raw = (await res.json()) as (Book & {
+        readings?: { chapterId: string; scrollPosition: number; updatedAt: number }[];
+      })[];
+      const books = raw.map(b => {
+        const readings = b.readings ?? [];
+        const scrollPositions: Record<number, number> = {};
+        readings.forEach(r => {
+          const idx = b.chapters.findIndex(c => c.id === r.chapterId);
+          if (idx !== -1) scrollPositions[idx] = r.scrollPosition;
+        });
+        const lastReading = readings.sort((a, z) => z.updatedAt - a.updatedAt)[0];
+        const currentChapterIndex = lastReading
+          ? Math.max(0, b.chapters.findIndex(c => c.id === lastReading.chapterId))
+          : 0;
+        return { ...b, currentChapterIndex, scrollPositions };
+      });
       set({ books, isLoading: false });
     } catch {
       set({ isLoading: false });
@@ -77,9 +87,15 @@ export const useBookStore = create<BookState>((set, get) => ({
 
   setCurrentChapter: (index: number) => {
     const { currentBook } = get();
-    if (currentBook) {
-      set({ currentBook: { ...currentBook, currentChapterIndex: index } });
-    }
+    if (!currentBook) return;
+    const chapter = currentBook.chapters[index];
+    set({ currentBook: { ...currentBook, currentChapterIndex: index } });
+    fetch(`/api/books/${currentBook.id}/chapters/${chapter.id}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scrollPosition: currentBook.scrollPositions[index] ?? 0 }),
+      credentials: 'include',
+    }).catch(() => {});
   },
 
   updateScrollPosition: async (chapterId: string, scrollTop: number) => {
