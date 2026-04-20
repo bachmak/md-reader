@@ -11,6 +11,7 @@ interface BookState {
   closeBook: () => void;
   removeBook: (id: string) => Promise<void>;
   setCurrentChapter: (index: number) => void;
+  reorderChapters: (fromIndex: number, toIndex: number) => void;
   updateScrollPosition: (chapterId: string, scrollTop: number) => Promise<void>;
 }
 
@@ -96,6 +97,41 @@ export const useBookStore = create<BookState>((set, get) => ({
       body: JSON.stringify({ scrollPosition: currentBook.scrollPositions[index] ?? 0 }),
       credentials: 'include',
     }).catch(() => {});
+  },
+
+  reorderChapters: (fromIndex: number, toIndex: number) => {
+    const { currentBook } = get();
+    if (!currentBook) return;
+
+    const chapters = [...currentBook.chapters];
+    const [moved] = chapters.splice(fromIndex, 1);
+    chapters.splice(toIndex, 0, moved);
+
+    let cur = currentBook.currentChapterIndex;
+    if (cur === fromIndex) {
+      cur = toIndex;
+    } else if (fromIndex < toIndex) {
+      if (cur > fromIndex && cur <= toIndex) cur--;
+    } else {
+      if (cur >= toIndex && cur < fromIndex) cur++;
+    }
+
+    const oldPos = currentBook.scrollPositions;
+    const scrollPositions: Record<number, number> = {};
+    chapters.forEach((chapter, newIdx) => {
+      const oldIdx = currentBook.chapters.findIndex(c => c.id === chapter.id);
+      if (oldPos[oldIdx] !== undefined) scrollPositions[newIdx] = oldPos[oldIdx];
+    });
+
+    const updatedBook = { ...currentBook, chapters, currentChapterIndex: cur, scrollPositions };
+    set({ currentBook: updatedBook, books: get().books.map(b => b.id === updatedBook.id ? updatedBook : b) });
+
+    fetch(`/api/books/${currentBook.id}/chapters/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chapterIds: chapters.map(c => c.id) }),
+      credentials: 'include',
+    }).catch(err => console.error('Failed to reorder chapters:', err));
   },
 
   updateScrollPosition: async (chapterId: string, scrollTop: number) => {

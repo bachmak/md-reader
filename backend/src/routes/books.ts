@@ -87,6 +87,27 @@ router.post('/', requireAuth, upload.array('files'), async (req, res) => {
   }
 });
 
+// Reorder chapters
+router.put('/:bookId/chapters/reorder', requireAuth, (req, res) => {
+  const user = req.user as User;
+  const { bookId } = req.params;
+  const { chapterIds } = req.body as { chapterIds: string[] };
+
+  try {
+    const book = db.prepare('SELECT * FROM books WHERE id = ? AND userId = ?').get(bookId, user.id);
+    if (!book) { res.status(404).json({ error: 'Book not found' }); return; }
+
+    const stmt = db.prepare('UPDATE chapters SET `order` = ? WHERE id = ? AND bookId = ?');
+    const update = db.transaction(() => {
+      chapterIds.forEach((id, idx) => stmt.run(idx, id, bookId));
+    });
+    update();
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to reorder chapters' });
+  }
+});
+
 // Get chapter content
 router.get('/:bookId/chapters/:chapterId', requireAuth, async (req, res) => {
   const user = req.user as User;

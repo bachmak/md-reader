@@ -9,6 +9,7 @@ export function ReaderView() {
   const closeBook = useBookStore(s => s.closeBook);
   const setCurrentChapter = useBookStore(s => s.setCurrentChapter);
   const updateScrollPosition = useBookStore(s => s.updateScrollPosition);
+  const reorderChapters = useBookStore(s => s.reorderChapters);
 
   const [content, setContent] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -105,6 +106,7 @@ export function ReaderView() {
                 setCurrentChapter(i);
                 setSidebarOpen(false);
               }}
+              onReorder={(from, to) => reorderChapters(from, to)}
               onClose={() => setSidebarOpen(false)}
             />
           </aside>
