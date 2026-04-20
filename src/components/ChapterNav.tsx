@@ -35,11 +35,11 @@ export function ChapterNav({ book, onSelect, onReorder, onClose }: Props) {
 
   return (
     <nav className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Chapters</span>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+        <span className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Chapters</span>
         <button
           onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-700 w-6 h-6 flex items-center justify-center rounded"
+          className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 w-6 h-6 flex items-center justify-center rounded"
           aria-label="Close"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -57,11 +57,11 @@ export function ChapterNav({ book, onSelect, onReorder, onClose }: Props) {
             onDrop={e => handleDrop(e, i)}
             onDragEnd={handleDragEnd}
             className={`flex items-center group/item transition-colors ${
-              overIndex === i && dragIndex !== i ? 'border-t-2 border-neutral-400' : 'border-t-2 border-transparent'
+              overIndex === i && dragIndex !== i ? 'border-t-2 border-neutral-400 dark:border-neutral-500' : 'border-t-2 border-transparent'
             } ${dragIndex === i ? 'opacity-40' : ''}`}
           >
             <span
-              className="pl-2 pr-1 py-2.5 text-neutral-200 hover:text-neutral-400 cursor-grab active:cursor-grabbing shrink-0"
+              className="pl-2 pr-1 py-2.5 text-neutral-200 dark:text-neutral-700 hover:text-neutral-400 dark:hover:text-neutral-500 cursor-grab active:cursor-grabbing shrink-0"
               aria-hidden
             >
               <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
@@ -74,11 +74,11 @@ export function ChapterNav({ book, onSelect, onReorder, onClose }: Props) {
               onClick={() => onSelect(i)}
               className={`flex-1 text-left pr-4 py-2.5 text-sm transition-colors ${
                 i === book.currentChapterIndex
-                  ? 'text-neutral-900 font-medium bg-white'
-                  : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'
+                  ? 'text-neutral-900 dark:text-neutral-100 font-medium bg-white dark:bg-neutral-700'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-white/60 dark:hover:bg-neutral-700/60'
               }`}
             >
-              <span className="text-neutral-300 mr-2 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+              <span className="text-neutral-300 dark:text-neutral-600 mr-2 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
               {chapter.name}
             </button>
           </li>

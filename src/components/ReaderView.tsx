@@ -61,12 +61,12 @@ export function ReaderView() {
   const showSidebar = sidebarOpen && currentBook.chapters.length > 1;
 
   return (
-    <div className="h-screen flex flex-col bg-white">
-      <header className="flex items-center gap-3 px-4 h-12 border-b border-neutral-200 shrink-0">
+    <div className="h-screen flex flex-col bg-white dark:bg-neutral-900">
+      <header className="flex items-center gap-3 px-4 h-12 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
         {currentBook.chapters.length > 1 && (
           <button
             onClick={() => setSidebarOpen(v => !v)}
-            className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-800 rounded transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 rounded transition-colors"
             aria-label="Toggle chapters"
           >
             <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
@@ -80,18 +80,18 @@ export function ReaderView() {
         <div className="flex-1 min-w-0 text-sm">
           {currentBook.chapters.length > 1 ? (
             <>
-              <span className="text-neutral-400">{currentBook.title}</span>
-              <span className="text-neutral-300 mx-1.5">·</span>
-              <span className="text-neutral-700 font-medium">{chapter.name}</span>
+              <span className="text-neutral-400 dark:text-neutral-500">{currentBook.title}</span>
+              <span className="text-neutral-300 dark:text-neutral-600 mx-1.5">·</span>
+              <span className="text-neutral-700 dark:text-neutral-200 font-medium">{chapter.name}</span>
             </>
           ) : (
-            <span className="text-neutral-700 font-medium">{chapter.name}</span>
+            <span className="text-neutral-700 dark:text-neutral-200 font-medium">{chapter.name}</span>
           )}
         </div>
 
         <button
           onClick={closeBook}
-          className="text-sm text-neutral-400 hover:text-neutral-700 px-2 py-1 rounded transition-colors"
+          className="text-sm text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 px-2 py-1 rounded transition-colors"
         >
           Library
         </button>
@@ -99,7 +99,7 @@ export function ReaderView() {
 
       <div className="flex flex-1 min-h-0">
         {showSidebar && (
-          <aside className="w-56 border-r border-neutral-200 shrink-0 overflow-y-auto bg-neutral-50">
+          <aside className="w-56 border-r border-neutral-200 dark:border-neutral-700 shrink-0 overflow-y-auto bg-neutral-50 dark:bg-neutral-800">
             <ChapterNav
               book={currentBook}
               onSelect={i => {
@@ -114,17 +114,17 @@ export function ReaderView() {
 
         <main ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
           {error ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-500 text-sm">
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-500 dark:text-neutral-400 text-sm">
               <p className="max-w-xs text-center">{error}</p>
               <button
                 onClick={() => setLoadTrigger(t => t + 1)}
-                className="underline hover:text-neutral-800"
+                className="underline hover:text-neutral-800 dark:hover:text-neutral-200"
               >
                 Retry
               </button>
             </div>
           ) : (
-            <article className="prose prose-neutral mx-auto px-8 py-14">
+            <article className="prose prose-neutral dark:prose-invert mx-auto px-8 py-14">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </article>
           )}
