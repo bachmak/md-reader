@@ -15,7 +15,6 @@ export function ReaderView() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadTrigger, setLoadTrigger] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export function ReaderView() {
 
         const savedScroll = book.scrollPositions[chapterIndex] ?? 0;
         requestAnimationFrame(() => {
-          if (scrollRef.current) scrollRef.current.scrollTop = savedScroll;
+          window.scrollTo(0, savedScroll);
         });
       } catch {
         setError('Could not load chapter.');
@@ -49,11 +48,16 @@ export function ReaderView() {
   const handleScroll = useCallback(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
-      if (!scrollRef.current || !currentBook) return;
+      if (!currentBook) return;
       const chapter = currentBook.chapters[currentBook.currentChapterIndex];
-      updateScrollPosition(chapter.id, scrollRef.current.scrollTop);
+      updateScrollPosition(chapter.id, window.scrollY);
     }, 400);
   }, [currentBook, updateScrollPosition]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   if (!currentBook) return null;
 
@@ -61,8 +65,8 @@ export function ReaderView() {
   const showSidebar = sidebarOpen && currentBook.chapters.length > 1;
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-neutral-900">
-      <header className="flex items-center gap-3 px-4 h-12 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
+    <div className="min-h-screen bg-white dark:bg-neutral-900">
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-12 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
         {currentBook.chapters.length > 1 && (
           <button
             onClick={() => setSidebarOpen(v => !v)}
@@ -97,9 +101,9 @@ export function ReaderView() {
         </button>
       </header>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex">
         {showSidebar && (
-          <aside className="w-56 border-r border-neutral-200 dark:border-neutral-700 shrink-0 overflow-y-auto bg-neutral-50 dark:bg-neutral-800">
+          <aside className="sticky top-12 h-[calc(100vh-3rem)] w-56 border-r border-neutral-200 dark:border-neutral-700 shrink-0 overflow-y-auto bg-neutral-50 dark:bg-neutral-800">
             <ChapterNav
               book={currentBook}
               onSelect={i => {
@@ -112,9 +116,9 @@ export function ReaderView() {
           </aside>
         )}
 
-        <main ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-w-0">
           {error ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-500 dark:text-neutral-400 text-sm">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3rem)] gap-3 text-neutral-500 dark:text-neutral-400 text-sm">
               <p className="max-w-xs text-center">{error}</p>
               <button
                 onClick={() => setLoadTrigger(t => t + 1)}
