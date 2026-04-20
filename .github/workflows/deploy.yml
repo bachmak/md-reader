@@ -15,7 +15,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/md-reader
+            cd ~/dev/md-reader
             git pull origin master
             docker compose up --build -d
             docker image prune -f
