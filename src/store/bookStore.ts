@@ -102,15 +102,17 @@ export const useBookStore = create<BookState>((set, get) => ({
     const { currentBook } = get();
     if (!currentBook) return;
 
-    try {
-      await fetch(`/api/books/${currentBook.id}/chapters/${chapterId}/progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scrollPosition: scrollTop }),
-        credentials: 'include',
-      });
-    } catch (err) {
-      console.error('Failed to save progress:', err);
+    const idx = currentBook.chapters.findIndex(c => c.id === chapterId);
+    if (idx !== -1) {
+      const scrollPositions = { ...currentBook.scrollPositions, [idx]: scrollTop };
+      set({ currentBook: { ...currentBook, scrollPositions } });
     }
+
+    fetch(`/api/books/${currentBook.id}/chapters/${chapterId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scrollPosition: scrollTop }),
+      credentials: 'include',
+    }).catch(err => console.error('Failed to save progress:', err));
   },
 }));
