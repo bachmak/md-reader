@@ -23,7 +23,12 @@ export const useBookStore = create<BookState>((set, get) => ({
     set({ isLoading: true });
     try {
       const res = await fetch('/api/books', { credentials: 'include' });
-      const books = (await res.json()) as Book[];
+      const raw = (await res.json()) as Book[];
+      const books = raw.map(b => ({
+        ...b,
+        currentChapterIndex: b.currentChapterIndex ?? 0,
+        scrollPositions: b.scrollPositions ?? {},
+      }));
       set({ books, isLoading: false });
     } catch {
       set({ isLoading: false });
@@ -43,7 +48,8 @@ export const useBookStore = create<BookState>((set, get) => ({
       });
 
       if (res.ok) {
-        const book = await res.json();
+        const raw = await res.json();
+        const book = { ...raw, currentChapterIndex: 0, scrollPositions: {} };
         set(state => ({ books: [book, ...state.books], currentBook: book }));
       }
     } catch (err) {
