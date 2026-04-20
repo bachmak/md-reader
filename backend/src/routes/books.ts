@@ -9,7 +9,7 @@ import { User, Book, Chapter } from '../types.js';
 
 const router = Router();
 
-const uploadDir = path.join(process.cwd(), 'uploads');
+const uploadDir = path.join(process.cwd(), 'data', 'uploads');
 const upload = multer({
   dest: uploadDir,
   fileFilter: (req, file, cb) => {
