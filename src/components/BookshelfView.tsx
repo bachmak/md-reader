@@ -81,11 +81,11 @@ export function BookshelfView() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Markdown files</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Chapter files (Markdown or HTML)</label>
                 <input
                   type="file"
                   multiple
-                  accept=".md,.markdown,.txt"
+                  accept=".md,.markdown,.txt,.html,.htm"
                   onChange={e => setFiles(e.target.files)}
                   className="w-full text-sm text-neutral-600 dark:text-neutral-400"
                 />
@@ -102,7 +102,7 @@ export function BookshelfView() {
             {/* Books list */}
             {books.length === 0 ? (
               <div className="text-center mt-12 text-neutral-400 dark:text-neutral-500">
-                <p className="text-sm">No books yet. Upload markdown files above.</p>
+                <p className="text-sm">No books yet. Upload chapter files above.</p>
               </div>
             ) : (
               <ul className="space-y-2">

@@ -7,3 +7,4 @@ uploads
 *.db-wal
 backend/dist
 backend/node_modules
+*.tsbuildinfo

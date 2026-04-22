@@ -5,9 +5,12 @@ export interface User {
   createdAt: number;
 }
 
+export type ChapterType = 'markdown' | 'html';
+
 export interface Chapter {
   id: string;
   name: string;
+  type: ChapterType;
   order: number;
 }
 

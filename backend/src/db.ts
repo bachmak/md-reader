@@ -32,6 +32,7 @@ export function initDb(): void {
       bookId TEXT NOT NULL,
       name TEXT NOT NULL,
       filename TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'markdown',
       \`order\` INTEGER NOT NULL,
       createdAt INTEGER NOT NULL,
       FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
@@ -50,6 +51,11 @@ export function initDb(): void {
       FOREIGN KEY(chapterId) REFERENCES chapters(id) ON DELETE CASCADE
     );
   `);
+
+  const chapterCols = db.pragma('table_info(chapters)') as { name: string }[];
+  if (!chapterCols.some(c => c.name === 'type')) {
+    db.exec(`ALTER TABLE chapters ADD COLUMN type TEXT NOT NULL DEFAULT 'markdown'`);
+  }
 }
 
 export default db;

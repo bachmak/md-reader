@@ -13,11 +13,14 @@ export interface Book {
   updatedAt: number;
 }
 
+export type ChapterType = 'markdown' | 'html';
+
 export interface Chapter {
   id: string;
   bookId: string;
   name: string;
   filename: string;
+  type: ChapterType;
   order: number;
   createdAt: number;
 }

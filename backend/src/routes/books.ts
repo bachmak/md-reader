@@ -5,7 +5,17 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import db from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
-import { User, Book, Chapter } from '../types.js';
+import { User, Book, Chapter, ChapterType } from '../types.js';
+
+const MARKDOWN_EXTS = new Set(['.md', '.markdown', '.txt']);
+const HTML_EXTS = new Set(['.html', '.htm']);
+
+function chapterTypeFromExt(filename: string): ChapterType | null {
+  const ext = path.extname(filename).toLowerCase();
+  if (HTML_EXTS.has(ext)) return 'html';
+  if (MARKDOWN_EXTS.has(ext)) return 'markdown';
+  return null;
+}
 
 const router = Router();
 
@@ -13,11 +23,10 @@ const uploadDir = path.join(process.cwd(), 'data', 'uploads');
 const upload = multer({
   dest: uploadDir,
   fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (['.md', '.markdown', '.txt'].includes(ext)) {
+    if (chapterTypeFromExt(file.originalname)) {
       cb(null, true);
     } else {
-      cb(new Error('Only markdown files allowed'));
+      cb(new Error('Only markdown or HTML files allowed'));
     }
   },
 });
@@ -34,8 +43,8 @@ router.get('/', requireAuth, (req, res) => {
 
   const booksWithChapters = books.map(book => {
     const chapters = db
-      .prepare('SELECT id, name, \`order\` FROM chapters WHERE bookId = ? ORDER BY \`order\`')
-      .all(book.id) as Array<{ id: string; name: string; order: number }>;
+      .prepare('SELECT id, name, type, \`order\` FROM chapters WHERE bookId = ? ORDER BY \`order\`')
+      .all(book.id) as Array<{ id: string; name: string; type: ChapterType; order: number }>;
     const readings = db
       .prepare('SELECT chapterId, scrollPosition, updatedAt FROM readings WHERE userId = ? AND bookId = ?')
       .all(user.id, book.id) as Array<{ chapterId: string; scrollPosition: number; updatedAt: number }>;
@@ -70,15 +79,16 @@ router.post('/', requireAuth, upload.array('files'), async (req, res) => {
         bookId,
         name: path.parse(file.originalname).name,
         filename: file.filename,
+        type: chapterTypeFromExt(file.originalname) ?? 'markdown',
         order: idx,
         createdAt: now,
       }));
 
     const stmt = db.prepare(
-      'INSERT INTO chapters (id, bookId, name, filename, \`order\`, createdAt) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO chapters (id, bookId, name, filename, type, \`order\`, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     for (const ch of chapters) {
-      stmt.run(ch.id, ch.bookId, ch.name, ch.filename, ch.order, ch.createdAt);
+      stmt.run(ch.id, ch.bookId, ch.name, ch.filename, ch.type, ch.order, ch.createdAt);
     }
 
     res.json({ id: bookId, title, chapters });
@@ -127,7 +137,7 @@ router.get('/:bookId/chapters/:chapterId', requireAuth, async (req, res) => {
 
     const filePath = path.join(uploadDir, chapter.filename);
     const content = await fs.readFile(filePath, 'utf-8');
-    res.json({ content });
+    res.json({ content, type: chapter.type });
   } catch (err) {
     res.status(500).json({ error: 'Failed to read chapter' });
   }

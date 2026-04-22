@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useBookStore } from '../store/bookStore';
 import { ChapterNav } from './ChapterNav';
+import type { ChapterType } from '../types';
 
 export function ReaderView() {
   const currentBook = useBookStore(s => s.currentBook);
@@ -12,6 +13,7 @@ export function ReaderView() {
   const reorderChapters = useBookStore(s => s.reorderChapters);
 
   const [content, setContent] = useState('');
+  const [contentType, setContentType] = useState<ChapterType>('markdown');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadTrigger, setLoadTrigger] = useState(0);
@@ -30,8 +32,9 @@ export function ReaderView() {
         const res = await fetch(`/api/books/${book.id}/chapters/${chapter.id}`, {
           credentials: 'include',
         });
-        const data = (await res.json()) as { content: string };
+        const data = (await res.json()) as { content: string; type: ChapterType };
         setContent(data.content);
+        setContentType(data.type);
 
         const savedScroll = book.scrollPositions[chapterIndex] ?? 0;
         requestAnimationFrame(() => {
@@ -129,7 +132,11 @@ export function ReaderView() {
             </div>
           ) : (
             <article className="prose prose-neutral dark:prose-invert mx-auto px-8 py-14">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              {contentType === 'html' ? (
+                <div dangerouslySetInnerHTML={{ __html: content }} />
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              )}
             </article>
           )}
         </main>
