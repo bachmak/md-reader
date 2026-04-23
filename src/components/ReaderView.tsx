@@ -27,6 +27,7 @@ export function ReaderView() {
   const [loadTrigger, setLoadTrigger] = useState(0);
   const debounceRef = useRef<number | undefined>(undefined);
   const lastScrollY = useRef(0);
+  const scrollYRef = useRef(0); // always-current position, more reliable than window.scrollY at tap time
 
   useEffect(() => {
     if (!currentBook) return;
@@ -46,9 +47,13 @@ export function ReaderView() {
         setContentType(data.type);
 
         const savedScroll = book.scrollPositions[chapterIndex] ?? 0;
-        requestAnimationFrame(() => {
+        // setTimeout(0) fires after layout is complete; rAF fires before layout,
+        // which causes scrollTo to be clamped on initial mount when content was empty.
+        setTimeout(() => {
           window.scrollTo(0, savedScroll);
-        });
+          scrollYRef.current = savedScroll;
+          lastScrollY.current = savedScroll;
+        }, 0);
       } catch {
         setError('Could not load chapter.');
       }
@@ -59,6 +64,8 @@ export function ReaderView() {
 
   const handleScroll = useCallback(() => {
     const y = window.scrollY;
+    scrollYRef.current = y;
+
     const delta = y - lastScrollY.current;
     if (Math.abs(delta) > 4) {
       setHeaderVisible(delta < 0 || y < 60);
@@ -69,7 +76,7 @@ export function ReaderView() {
     debounceRef.current = window.setTimeout(() => {
       if (!currentBook) return;
       const chapter = currentBook.chapters[currentBook.currentChapterIndex];
-      updateScrollPosition(chapter.id, window.scrollY);
+      updateScrollPosition(chapter.id, scrollYRef.current);
     }, 400);
   }, [currentBook, updateScrollPosition]);
 
@@ -115,7 +122,7 @@ export function ReaderView() {
         <button
           onClick={() => {
             clearTimeout(debounceRef.current);
-            updateScrollPosition(chapter.id, window.scrollY);
+            updateScrollPosition(chapter.id, scrollYRef.current);
             closeBook();
           }}
           className="text-sm text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 px-2 py-1 rounded transition-colors"
