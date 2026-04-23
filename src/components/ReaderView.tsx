@@ -104,7 +104,11 @@ export function ReaderView() {
         </div>
 
         <button
-          onClick={closeBook}
+          onClick={() => {
+            clearTimeout(debounceRef.current);
+            updateScrollPosition(chapter.id, window.scrollY);
+            closeBook();
+          }}
           className="text-sm text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 px-2 py-1 rounded transition-colors"
         >
           Library

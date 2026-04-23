@@ -72,7 +72,13 @@ export const useBookStore = create<BookState>((set, get) => ({
     set({ currentBook: book });
   },
 
-  closeBook: () => set({ currentBook: null }),
+  closeBook: () => {
+    const { currentBook, books } = get();
+    set({
+      currentBook: null,
+      books: currentBook ? books.map(b => b.id === currentBook.id ? currentBook : b) : books,
+    });
+  },
 
   removeBook: async (id: string) => {
     try {
@@ -141,7 +147,11 @@ export const useBookStore = create<BookState>((set, get) => ({
     const idx = currentBook.chapters.findIndex(c => c.id === chapterId);
     if (idx !== -1) {
       const scrollPositions = { ...currentBook.scrollPositions, [idx]: scrollTop };
-      set({ currentBook: { ...currentBook, scrollPositions } });
+      const updated = { ...currentBook, scrollPositions };
+      set(state => ({
+        currentBook: updated,
+        books: state.books.map(b => b.id === updated.id ? updated : b),
+      }));
     }
 
     fetch(`/api/books/${currentBook.id}/chapters/${chapterId}/progress`, {
