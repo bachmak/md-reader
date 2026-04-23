@@ -22,9 +22,11 @@ export function ReaderView() {
   const [content, setContent] = useState('');
   const [contentType, setContentType] = useState<ChapterType>('markdown');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadTrigger, setLoadTrigger] = useState(0);
   const debounceRef = useRef<number | undefined>(undefined);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     if (!currentBook) return;
@@ -56,6 +58,13 @@ export function ReaderView() {
   }, [currentBook?.id, currentBook?.currentChapterIndex, loadTrigger]);
 
   const handleScroll = useCallback(() => {
+    const y = window.scrollY;
+    const delta = y - lastScrollY.current;
+    if (Math.abs(delta) > 4) {
+      setHeaderVisible(delta < 0 || y < 60);
+      lastScrollY.current = y;
+    }
+
     clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
       if (!currentBook) return;
@@ -76,10 +85,10 @@ export function ReaderView() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900">
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-12 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+      <header className={`sticky top-0 z-10 flex items-center gap-3 px-4 h-12 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         {currentBook.chapters.length > 1 && (
           <button
-            onClick={() => setSidebarOpen(v => !v)}
+            onClick={() => { setSidebarOpen(v => !v); setHeaderVisible(true); }}
             className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 rounded transition-colors"
             aria-label="Toggle chapters"
           >
