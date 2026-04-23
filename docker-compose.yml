@@ -20,6 +20,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     env_file: .env.local
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
       - app
 
