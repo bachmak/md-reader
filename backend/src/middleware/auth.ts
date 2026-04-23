@@ -74,3 +74,23 @@ export function requireAuth(
   }
   next();
 }
+
+export function requireAuthOrApiKey(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  if (req.user) return next();
+
+  const apiKey = process.env.API_KEY;
+  const authHeader = req.headers.authorization;
+  if (apiKey && authHeader === `Bearer ${apiKey}`) {
+    const user = db.prepare('SELECT * FROM users LIMIT 1').get() as User | undefined;
+    if (user) {
+      req.user = user;
+      return next();
+    }
+  }
+
+  res.status(401).json({ error: 'Not authenticated' });
+}

@@ -5,6 +5,13 @@ import { useBookStore } from '../store/bookStore';
 import { ChapterNav } from './ChapterNav';
 import type { ChapterType } from '../types';
 
+function sanitizeHtml(raw: string): string {
+  const doc = new DOMParser().parseFromString(raw, 'text/html');
+  doc.querySelectorAll('style').forEach(el => el.remove());
+  doc.querySelectorAll('[style]').forEach(el => el.removeAttribute('style'));
+  return doc.body.innerHTML;
+}
+
 export function ReaderView() {
   const currentBook = useBookStore(s => s.currentBook);
   const closeBook = useBookStore(s => s.closeBook);
@@ -133,7 +140,7 @@ export function ReaderView() {
           ) : (
             <article className="prose prose-neutral dark:prose-invert mx-auto px-8 py-14">
               {contentType === 'html' ? (
-                <div dangerouslySetInnerHTML={{ __html: content }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
               ) : (
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
               )}

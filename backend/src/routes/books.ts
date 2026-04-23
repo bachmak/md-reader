@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import db from '../db.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuthOrApiKey } from '../middleware/auth.js';
 import { User, Book, Chapter, ChapterType } from '../types.js';
 
 const MARKDOWN_EXTS = new Set(['.md', '.markdown', '.txt']);
@@ -35,7 +35,7 @@ const upload = multer({
 await fs.mkdir(uploadDir, { recursive: true });
 
 // List books for authenticated user
-router.get('/', requireAuth, (req, res) => {
+router.get('/', requireAuthOrApiKey, (req, res) => {
   const user = req.user as User;
   const books = db
     .prepare('SELECT * FROM books WHERE userId = ? ORDER BY updatedAt DESC')
@@ -55,7 +55,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // Create book
-router.post('/', requireAuth, upload.array('files'), async (req, res) => {
+router.post('/', requireAuthOrApiKey, upload.array('files'), async (req, res) => {
   const user = req.user as User;
   const { title } = req.body;
   const files = req.files as Express.Multer.File[];
@@ -98,7 +98,7 @@ router.post('/', requireAuth, upload.array('files'), async (req, res) => {
 });
 
 // Reorder chapters
-router.put('/:bookId/chapters/reorder', requireAuth, (req, res) => {
+router.put('/:bookId/chapters/reorder', requireAuthOrApiKey, (req, res) => {
   const user = req.user as User;
   const { bookId } = req.params;
   const { chapterIds } = req.body as { chapterIds: string[] };
@@ -119,7 +119,7 @@ router.put('/:bookId/chapters/reorder', requireAuth, (req, res) => {
 });
 
 // Get chapter content
-router.get('/:bookId/chapters/:chapterId', requireAuth, async (req, res) => {
+router.get('/:bookId/chapters/:chapterId', requireAuthOrApiKey, async (req, res) => {
   const user = req.user as User;
   const { bookId, chapterId } = req.params;
 
@@ -144,7 +144,7 @@ router.get('/:bookId/chapters/:chapterId', requireAuth, async (req, res) => {
 });
 
 // Update reading progress
-router.post('/:bookId/chapters/:chapterId/progress', requireAuth, (req, res) => {
+router.post('/:bookId/chapters/:chapterId/progress', requireAuthOrApiKey, (req, res) => {
   const user = req.user as User;
   const { bookId, chapterId } = req.params;
   const { scrollPosition } = req.body;
@@ -171,7 +171,7 @@ router.post('/:bookId/chapters/:chapterId/progress', requireAuth, (req, res) => 
 });
 
 // Delete book
-router.delete('/:bookId', requireAuth, (req, res) => {
+router.delete('/:bookId', requireAuthOrApiKey, (req, res) => {
   const user = req.user as User;
   const { bookId } = req.params;
 
