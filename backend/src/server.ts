@@ -47,6 +47,12 @@ app.use(passport.session());
 app.use('/auth', authRouter);
 app.use('/api/books', requireAuth, booksRouter);
 
+// Serve presentation slides from /data/slides (drop HTML files there on the host)
+const slidesDir = process.env.NODE_ENV === 'production'
+  ? '/app/data/slides'
+  : path.join(__dirname, '..', '..', '..', 'data', 'slides');
+app.use('/slides', express.static(slidesDir));
+
 // Serve frontend
 const frontendDir = process.env.NODE_ENV === 'production'
   ? path.join(__dirname, 'public')
